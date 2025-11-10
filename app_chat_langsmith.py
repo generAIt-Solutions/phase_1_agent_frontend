@@ -11,6 +11,7 @@ import os
 # LangSmith deployment URL
 LANGSMITH_URL = "https://a3e-beta-test-47dfa3bfa7bf56c4a3f89c7dc4d37d41.us.langgraph.app"
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY", "")
+LANGSMITH_X_API_KEY = os.getenv("LANGSMITH_X_API_KEY", "")
 
 # Page config
 st.set_page_config(
@@ -159,7 +160,8 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
             f"{LANGSMITH_URL}/runs/stream",
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {LANGSMITH_API_KEY}" if LANGSMITH_API_KEY else ""
+                "x-api-key": LANGSMITH_X_API_KEY
+
             },
                 json=payload,
                 stream=True,
