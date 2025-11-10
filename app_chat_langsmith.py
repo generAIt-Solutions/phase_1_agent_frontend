@@ -160,7 +160,7 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                 f"{LANGSMITH_URL}/runs/stream",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {LANGSMITH_API_KEY}"
+                    "Authorization": "Bearer streamlit-frontend-2025"
                 },
                 json=payload,
                 stream=True,
