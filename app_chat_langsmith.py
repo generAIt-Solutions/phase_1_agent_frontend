@@ -157,12 +157,11 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
             status_text = st.empty()
 
             with requests.post(
-            f"{LANGSMITH_URL}/runs/stream",
-            headers={
-                "Content-Type": "application/json",
-                "X-Api-Key": LANGSMITH_X_API_KEY
-
-            },
+                f"{LANGSMITH_URL}/runs/stream",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {LANGSMITH_API_KEY}"
+                },
                 json=payload,
                 stream=True,
                 timeout=300
