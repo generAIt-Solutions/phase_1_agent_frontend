@@ -6,12 +6,9 @@ from datetime import datetime
 from config import supabase
 import requests
 import json
-import os
 
 # LangSmith deployment URL
 LANGSMITH_URL = "https://a3e-beta-test-47dfa3bfa7bf56c4a3f89c7dc4d37d41.us.langgraph.app"
-LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY", "")
-LANGSMITH_X_API_KEY = os.getenv("LANGSMITH_X_API_KEY", "")
 
 # Page config
 st.set_page_config(
@@ -138,6 +135,7 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
             full_message = f"{context_info}**USER MESSAGE:** {prompt}"
             
             payload = {
+                "assistant_id": "environmental_agent",
                 "input": {
                     "messages": [
                         {
@@ -150,7 +148,8 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                     "configurable": {
                         "thread_id": st.session_state.thread_id
                     }
-                }
+                },
+                "stream_mode": ["values"]
             }
 
             response_text = ""
@@ -160,7 +159,7 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                 f"{LANGSMITH_URL}/runs/stream",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer streamlit-frontend-2025"
+                    "x-api-key": "streamlit-frontend-2025"
                 },
                 json=payload,
                 stream=True,
