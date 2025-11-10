@@ -6,9 +6,11 @@ from datetime import datetime
 from config import supabase
 import requests
 import json
+import os
 
 # LangSmith deployment URL
 LANGSMITH_URL = "https://a3e-beta-test-47dfa3bfa7bf56c4a3f89c7dc4d37d41.us.langgraph.app"
+LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY", "")
 
 # Page config
 st.set_page_config(
@@ -154,10 +156,11 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
             status_text = st.empty()
 
             with requests.post(
-                f"{LANGSMITH_URL}/runs/stream",
-                headers={
-                    "Content-Type": "application/json"
-                },
+            f"{LANGSMITH_URL}/runs/stream",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {LANGSMITH_API_KEY}" if LANGSMITH_API_KEY else ""
+            },
                 json=payload,
                 stream=True,
                 timeout=300
