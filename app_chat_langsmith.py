@@ -160,7 +160,7 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
             f"{LANGSMITH_URL}/runs/stream",
             headers={
                 "Content-Type": "application/json",
-                "x-api-key": LANGSMITH_X_API_KEY
+                "X-Api-Key": LANGSMITH_X_API_KEY
 
             },
                 json=payload,
