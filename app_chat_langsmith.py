@@ -210,7 +210,8 @@ if prompt := st.chat_input("Describe task for Phase 1 Agent to complete"):
             with requests.post(
                 f"{LANGSMITH_URL}/runs/stream",
                 headers={
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer streamlit-frontend-2025"
                 },
                 json=payload,
                 stream=True,
