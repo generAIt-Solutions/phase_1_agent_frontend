@@ -29,7 +29,9 @@ if "agent_state" not in st.session_state:
         "uploaded_files": {},
         "session_id": st.session_state.session_id,
         "source": "EDR",
-        "section": "5.2.1"
+        "section": "5.2.1",
+        "subject_property_file": None,
+        "surrounding_property_files": []
     }
 
 if "messages" not in st.session_state:
@@ -84,20 +86,39 @@ with st.sidebar:
 
                     st.session_state.agent_state["uploaded_files"][filename] = {
                         "path": path,
+                        "bucket": "Phase1",
                         "uploaded_at": datetime.now().isoformat(),
                         "size": len(file_bytes)
                     }
 
-                    st.success(f"✅ Uploaded {filename}")
+                    # Assign file role based on workflow stage
+                    if not st.session_state.agent_state.get("subject_property_file"):
+                        # First file = subject property
+                        st.session_state.agent_state["subject_property_file"] = filename
+                        st.success(f"✅ Uploaded {filename} (Subject Property)")
+                    else:
+                        # Subsequent files = surrounding properties
+                        st.session_state.agent_state["surrounding_property_files"].append(filename)
+                        st.success(f"✅ Uploaded {filename} (Surrounding Properties)")
 
                 except Exception as e:
                     st.error(f"❌ Upload failed: {str(e)}")
 
+    # Display uploaded files with roles
     if st.session_state.agent_state["uploaded_files"]:
         st.divider()
         st.subheader("Uploaded Files")
+        
+        subject_file = st.session_state.agent_state.get("subject_property_file")
+        surrounding_files = st.session_state.agent_state.get("surrounding_property_files", [])
+        
         for filename in st.session_state.agent_state["uploaded_files"].keys():
-            st.text(f"📄 {filename}")
+            if filename == subject_file:
+                st.text(f"📄 {filename} (Subject)")
+            elif filename in surrounding_files:
+                st.text(f"📄 {filename} (Surrounding)")
+            else:
+                st.text(f"📄 {filename}")
 
     st.divider()
     if st.button("🔄 Reset Session", type="secondary"):
@@ -130,7 +151,9 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                     context_info += f"  - {fname}: path={finfo['path']}\n"
                 context_info += f"- session_id: {st.session_state.session_id}\n"
                 context_info += f"- source: {st.session_state.agent_state.get('source')}\n"
-                context_info += f"- section: {st.session_state.agent_state.get('section')}\n\n"
+                context_info += f"- section: {st.session_state.agent_state.get('section')}\n"
+                context_info += f"- subject_property_file: {st.session_state.agent_state.get('subject_property_file')}\n"
+                context_info += f"- surrounding_property_files: {st.session_state.agent_state.get('surrounding_property_files', [])}\n\n"
             
             full_message = f"{context_info}**USER MESSAGE:** {prompt}"
             
