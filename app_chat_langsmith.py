@@ -188,6 +188,7 @@ if prompt := st.chat_input("Describe task for Phase 1 Agent to complete"):
             
             # Prepare payload for LangSmith
             payload = {
+                "assistant_id": "environmental_agent",
                 "input": {
                     "messages": [
                         {
@@ -200,7 +201,8 @@ if prompt := st.chat_input("Describe task for Phase 1 Agent to complete"):
                     "configurable": {
                         "thread_id": st.session_state.thread_id
                     }
-                }
+                },
+                "stream_mode": ["values"]
             }
 
             # Stream agent response from LangSmith
@@ -264,4 +266,3 @@ if prompt := st.chat_input("Describe task for Phase 1 Agent to complete"):
             })
             import traceback
             st.code(traceback.format_exc())
-
