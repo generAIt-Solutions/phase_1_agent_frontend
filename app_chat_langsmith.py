@@ -19,6 +19,9 @@ st.set_page_config(
 
 st.title("🌍 Environmental Report Assistant")
 st.caption("Conversational AI for Phase I Environmental Site Assessment Reports")
+st.caption("This agent will complete the ERIS/EDR sections for the subject property and surrounding properties Do Not upload the entire ERIS/EDR report.")
+st.caption("Only upload the individual listings for each address Keep in mind the max amount of files you can upload at a time is 8.")
+st.caption("DISCLAIMER: This agent may make mistakes. Make sure to double check the summaries prior to finalizing your report.")
 
 # Initialize session state
 if "session_id" not in st.session_state:
@@ -72,6 +75,7 @@ with st.sidebar:
 
     if uploaded_file is not None:
         filename = uploaded_file.name
+
         if filename not in st.session_state.agent_state["uploaded_files"]:
             with st.spinner(f"Uploading {filename}..."):
                 try:
@@ -120,29 +124,48 @@ with st.sidebar:
             else:
                 st.text(f"📄 {filename}")
 
+    # Show extracted data
+    if st.session_state.agent_state.get("subject_address"):
+        st.divider()
+        st.subheader("Extracted Data")
+        st.text(f"📍 Subject: {st.session_state.agent_state['subject_address'][:50]}...")
+
+    if st.session_state.agent_state.get("groundwater_flow"):
+        st.text(f"🌊 Flow: {st.session_state.agent_state['groundwater_flow']}")
+
+    # Reset button
     st.divider()
     if st.button("🔄 Reset Session", type="secondary"):
         st.session_state.clear()
         st.rerun()
 
+# Main chat interface
 st.divider()
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Display chat messages
+chat_container = st.container()
+with chat_container:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask me to process a report or ask questions..."):
+# Chat input
+if prompt := st.chat_input("Describe task for Phase 1 Agent to complete"):
+    # Add user message to chat
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # Get agent response from LangSmith
     with st.chat_message("assistant"):
         response_container = st.empty()
 
         try:
+            # Build context message with state info
             uploaded_files = st.session_state.agent_state.get("uploaded_files", {})
             
+            # Create a context string to prepend to user message
             context_info = ""
             if uploaded_files:
                 context_info += "**SYSTEM CONTEXT:**\n"
@@ -153,12 +176,18 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                 context_info += f"- source: {st.session_state.agent_state.get('source')}\n"
                 context_info += f"- section: {st.session_state.agent_state.get('section')}\n"
                 context_info += f"- subject_property_file: {st.session_state.agent_state.get('subject_property_file')}\n"
-                context_info += f"- surrounding_property_files: {st.session_state.agent_state.get('surrounding_property_files', [])}\n\n"
+                context_info += f"- surrounding_property_files: {st.session_state.agent_state.get('surrounding_property_files', [])}\n"
+                if st.session_state.agent_state.get("subject_address"):
+                    context_info += f"- subject_address: {st.session_state.agent_state['subject_address']}\n"
+                if st.session_state.agent_state.get("groundwater_flow"):
+                    context_info += f"- groundwater_flow: {st.session_state.agent_state['groundwater_flow']}\n"
+                context_info += "\n"
             
+            # Combine user message with context
             full_message = f"{context_info}**USER MESSAGE:** {prompt}"
             
+            # Prepare payload for LangSmith
             payload = {
-                "assistant_id": "environmental_agent",
                 "input": {
                     "messages": [
                         {
@@ -171,18 +200,17 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                     "configurable": {
                         "thread_id": st.session_state.thread_id
                     }
-                },
-                "stream_mode": ["values"]
+                }
             }
 
+            # Stream agent response from LangSmith
             response_text = ""
             status_text = st.empty()
 
             with requests.post(
                 f"{LANGSMITH_URL}/runs/stream",
                 headers={
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer streamlit-frontend-2025"
+                    "Content-Type": "application/json"
                 },
                 json=payload,
                 stream=True,
@@ -194,8 +222,9 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                     if line:
                         line_str = line.decode('utf-8')
                         
+                        # Parse SSE format
                         if line_str.startswith('data: '):
-                            data_str = line_str[6:]
+                            data_str = line_str[6:]  # Remove 'data: ' prefix
                             
                             try:
                                 data = json.loads(data_str)
@@ -206,15 +235,19 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                                         last_message = messages[-1]
                                         
                                         if last_message.get("type") == "ai":
+                                            # Update the response as it comes in
                                             response_text = last_message.get("content", "")
                                             response_container.markdown(response_text)
                                         else:
+                                            # Show tool activity
                                             status_text.info("🔄 Processing...")
                             except json.JSONDecodeError:
                                 pass
             
+            # Clear status when done
             status_text.empty()
 
+            # Add assistant response to chat history
             if response_text:
                 st.session_state.messages.append({
                     "role": "assistant",
@@ -228,3 +261,6 @@ if prompt := st.chat_input("Ask me to process a report or ask questions..."):
                 "role": "assistant",
                 "content": error_msg
             })
+            import traceback
+            st.code(traceback.format_exc())
+
