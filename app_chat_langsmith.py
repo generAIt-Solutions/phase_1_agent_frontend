@@ -123,18 +123,17 @@ if prompt := st.chat_input("Message..."):
     with st.chat_message("user"):
         st.markdown(prompt)
     
-    # Build context with FULL PATHS, not just filenames
+    # Build context with FILENAMES, not paths (agent reconstructs paths internally)
     files = list(st.session_state.file_paths.keys())
-    paths = list(st.session_state.file_paths.values())
     
-    subject_file_path = paths[0] if paths else None
-    surrounding_file_paths = paths[1:] if len(paths) > 1 else []
+    subject_file_name = files[0] if files else None
+    surrounding_file_names = files[1:] if len(files) > 1 else []
     
     context = f"""**SYSTEM CONTEXT:**
 - session_id: {st.session_state.session_id}
 - source: {source}
-- subject_property_file: {subject_file_path}
-- surrounding_property_files: {surrounding_file_paths}
+- subject_property_file: {subject_file_name}
+- surrounding_property_files: {surrounding_file_names}
 """
     
     full_message = f"{context}\n\n**USER MESSAGE:** {prompt}"
