@@ -14,7 +14,7 @@ st.caption("DISCLAIMER: This agent may make mistakes. Make sure to double check 
 
 # LangSmith Configuration
 LANGSMITH_URL = "https://a3e-beta-test-47dfa3bfa7bf56c4a3f89c7dc4d37d41.us.langgraph.app"
-ASSISTANT_ID = "environmental_agent"
+ASSISTANT_ID = "e7bec632-7e78-51e1-bb27-d7e79cafb2ab"
 
 
 def stream_langsmith_response(message: str, thread_id: str) -> str:
