@@ -3,7 +3,6 @@ import streamlit as st
 import uuid
 import requests
 import json
-import os
 from config import supabase
 
 st.set_page_config(page_title="Phase I ESA Agent", page_icon="🌍")
@@ -15,8 +14,7 @@ st.caption("DISCLAIMER: This agent may make mistakes. Make sure to double check 
 
 # LangSmith Configuration
 LANGSMITH_URL = "https://a3e-beta-test-47dfa3bfa7bf56c4a3f89c7dc4d37d41.us.langgraph.app"
-LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY", "")
-ASSISTANT_ID = os.getenv("LANGSMITH_ASSISTANT_ID", "agent")  # Your assistant ID
+ASSISTANT_ID = "environmental_agent"
 
 
 def stream_langsmith_response(message: str, thread_id: str) -> str:
@@ -35,7 +33,7 @@ def stream_langsmith_response(message: str, thread_id: str) -> str:
     
     headers = {
         "Content-Type": "application/json",
-        "X-Api-Key": LANGSMITH_API_KEY
+        "Authorization": "Bearer streamlit-frontend-2025"
     }
     
     full_response = ""
